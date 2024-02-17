@@ -2,6 +2,7 @@ from protobuf3.message import Message
 from protobuf3.fields import (
     MessageField,
     Int32Field,
+    FloatField,
     Int64Field,
     StringField,
     BoolField,
@@ -13,20 +14,14 @@ class Source(Message):
     id = Int64Field(field_number=2)
 
 
-class Category(Message):
-    name = StringField(field_number=1)
-    order = Int32Field(field_number=2)
-    flags = Int32Field(field_number=3)
-
-
 class Chapter(Message):
     url = StringField(field_number=1)
     name = StringField(field_number=2)
     scanlator = StringField(field_number=3)
     read = BoolField(field_number=4)
-    bookmark = BoolField(field_number=5)
-    lastPage = Int32Field(field_number=6)
-    pagesLeft = Int32Field(field_number=800)
+    bookmark = BoolField(field_number=5, optional=True)
+    last_page = Int32Field(field_number=6)
+    number = FloatField(field_number=9)
 
 
 class Manga(Message):
@@ -44,6 +39,18 @@ class Manga(Message):
     categories = Int32Field(field_number=17, repeated=True)
     favorite = BoolField(field_number=100)
 
+    def get_latest_and_newest_chapter(self):
+        latest = None
+        newest = None
+        for chapter in self.chapters:
+            if chapter.number > len(self.chapters):
+                continue
+            if chapter.read and (latest == None or latest.number < chapter.number):
+                latest = chapter
+            if newest == None or newest.number < chapter.number:
+                newest = chapter
+        return latest, newest
+
     def print(self):
         print(
             f"Title: {self.title}\nURL: {self.url}\nAuthor and artist: {self.author}; {self.artist}\nDescription: {self.description}\nChapter read: {len([c for c in self.chapters if c.read])}/{len(self.chapters)}\n"
@@ -52,5 +59,4 @@ class Manga(Message):
 
 class Backup(Message):
     mangaList = MessageField(message_cls=Manga, field_number=1, repeated=True)
-    categories = MessageField(message_cls=Category, field_number=2, repeated=True)
     sources = MessageField(message_cls=Source, field_number=101, repeated=True)
