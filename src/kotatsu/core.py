@@ -24,3 +24,9 @@ class KotatsuBackup:
         with zipfile.ZipFile(f"output/tachiyomi_to_kotatsu_{today}.bk", "a") as file:
             file.write("output/favourites", "favourites")
             file.write("output/history", "history")
+
+        if os.path.exists("output/favourites"):
+            os.remove("output/favourites")
+
+        if os.path.exists("output/history"):
+            os.remove("output/history")
