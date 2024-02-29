@@ -11,7 +11,7 @@ A tool for converting [Tachiyomi](https://tachiyomi.org/) backups into [Kotatsu]
 
 Copy your Tachiyomi backup to the folder where you cloned this repo.
 
-Run `python src/main.py <backup)file_name>`.
+Run `python src/main.py <backup_file_name>`.
 
 This should generate an `output` folder with a `.bk` Kotatsu backup file. Copy the file to your desired device and import it from the Kotatsu app.
 
