@@ -17,7 +17,8 @@ This should generate an `output` folder with a `.bk` Kotatsu backup file. Copy t
 
 ## Notes
 
-Kotatsu transforms different sources' urls differently. This means each source needs to be supported individually. This tool currently explicitly supports `Mangadex` and `Mangakakalot`. Some other sources may be supported out of the box but I cannot guarantee it.
+Kotatsu transforms different sources' urls differently. This means each source needs to be supported individually. This tool currently explicitly supports `Mangadex` and `Mangakakalot`.
+In order to support more sources, it's necessary to correlate Tachiyomi source id to the source name, and map it to Kotatsu's source name.
 
 Feel free to create PRs for other sources if you want to contribute.
 
