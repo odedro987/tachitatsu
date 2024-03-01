@@ -1,5 +1,4 @@
 import kotatsu.helpers as kotatsu
-import tachiyomi.helpers as tachi
 from kotatsu.model import (
     Manga as KotatsuManga,
     FavoritesEntry,
@@ -10,7 +9,13 @@ from tachiyomi.model import Manga as TachiyomiManga
 from tachiyomi.core import TachiyomiBackup
 import json
 
-SOURCES_MAP = {"MangaDex": "MANGADEX", "Mangakakalot": "MANGAKAKALOTTV"}
+
+def to_kotatsu_source(ty_source) -> str:
+    if ty_source == "Mangakakalot":
+        return "MANGAKAKALOTTV"
+    if ty_source == "Comick":
+        return "COMICK_FUN"
+    return ty_source.upper()
 
 
 def to_kotatsu_url(ty_source: str, ty_url: str) -> str:
@@ -18,6 +23,8 @@ def to_kotatsu_url(ty_source: str, ty_url: str) -> str:
         return ty_url.replace("/manga/", "").replace("/title/", "")
     if ty_source == "Mangakakalot":
         return ty_url.replace("https://chapmanganato.to/", "/manga/")
+    if ty_source == "Comick":
+        return ty_url.replace("/comic/", "")
     return ty_url
 
 
@@ -26,6 +33,8 @@ def to_kotatsu_chapter_url(ty_source: str, ty_url: str) -> str:
         return ty_url.replace("/chapter/", "")
     if ty_source == "Mangakakalot":
         return ty_url.replace("https://chapmanganato.to/", "/chapter/")
+    if ty_source == "Comick":
+        return ty_url.replace("/comic/", "")
     return ty_url
 
 
@@ -34,18 +43,20 @@ def to_kotatsu_public_url(ty_source: str, kt_url: str) -> str:
         return "https://mangadex.org/title/" + kt_url
     if ty_source == "Mangakakalot":
         return "https://ww7.mangakakalot.tv" + kt_url
+    if ty_source == "Comick":
+        return "https://comick.cc" + kt_url
     return kt_url
 
 
 def to_kotatsu_id(ty_source: str, ty_url: str) -> int:
     return kotatsu.get_kotatsu_id(
-        SOURCES_MAP[ty_source] + to_kotatsu_url(ty_source, ty_url)
+        to_kotatsu_source(ty_source) + to_kotatsu_url(ty_source, ty_url)
     )
 
 
 def to_kotatsu_chapter_id(ty_source: str, ty_url: str) -> int:
     return kotatsu.get_kotatsu_id(
-        SOURCES_MAP[ty_source] + to_kotatsu_chapter_url(ty_source, ty_url)
+        to_kotatsu_source(ty_source) + to_kotatsu_chapter_url(ty_source, ty_url)
     )
 
 
@@ -61,22 +72,21 @@ def to_kotatsu_status(ty_status: int) -> str:
     return ""
 
 
-def to_kotatsu_manga(ty_manga: TachiyomiManga) -> KotatsuManga:
-    ty_src = tachi.get_source_name(ty_manga.source)
-    kotatsu_url = to_kotatsu_url(ty_src, ty_manga.url)
+def to_kotatsu_manga(ty_manga: TachiyomiManga, ty_source: str) -> KotatsuManga:
+    kotatsu_url = to_kotatsu_url(ty_source, ty_manga.url)
     return KotatsuManga(
-        to_kotatsu_id(ty_src, ty_manga.url),
+        to_kotatsu_id(ty_source, ty_manga.url),
         ty_manga.title,
         None,
         kotatsu_url,
-        to_kotatsu_public_url(ty_src, kotatsu_url),
+        to_kotatsu_public_url(ty_source, kotatsu_url),
         -1.0,
         False,
         ty_manga.thumbnail,
         None,
         to_kotatsu_status(ty_manga.status),
         ty_manga.author,
-        SOURCES_MAP[ty_src],
+        to_kotatsu_source(ty_source),
         [],
     )
 
@@ -84,7 +94,6 @@ def to_kotatsu_manga(ty_manga: TachiyomiManga) -> KotatsuManga:
 def to_kotatsu_favorite(
     ty_manga: TachiyomiManga, kt_manga: KotatsuManga
 ) -> FavoritesEntry:
-    ty_src = tachi.get_source_name(ty_manga.source)
     return FavoritesEntry(
         kt_manga.id,
         1,
@@ -96,15 +105,13 @@ def to_kotatsu_favorite(
 
 
 def to_kotatsu_history(
-    ty_manga: TachiyomiManga, kt_manga: KotatsuManga
+    ty_manga: TachiyomiManga, ty_source: str, kt_manga: KotatsuManga
 ) -> HistoryRecord:
-    ty_src = tachi.get_source_name(ty_manga.source)
     latest_chapter, newest_chapter = ty_manga.get_latest_and_newest_chapter()
-    chapter_id = (
-        to_kotatsu_chapter_id(ty_src, latest_chapter.url)
-        if latest_chapter != None
-        else 0
-    )
+    if latest_chapter == None:
+        return None
+
+    chapter_id = to_kotatsu_chapter_id(ty_source, latest_chapter.url)
     return HistoryRecord(
         kt_manga.id,
         ty_manga.date_added,
@@ -124,8 +131,13 @@ def to_kotatsu_history(
 def to_kotatsu_backup(ty_backup: TachiyomiBackup) -> KotatsuBackup:
     favorites = []
     history = []
-    for manga in ty_backup.data.mangaList:
-        kotatsu_manga = to_kotatsu_manga(manga)
+    total = len(ty_backup.data.mangaList)
+    for i, manga in enumerate(ty_backup.data.mangaList):
+        manga_src = ty_backup.sources[manga.source]
+        kotatsu_manga = to_kotatsu_manga(manga, manga_src)
         favorites.append(to_kotatsu_favorite(manga, kotatsu_manga).__dict__)
-        history.append(to_kotatsu_history(manga, kotatsu_manga).__dict__)
+        history_entry = to_kotatsu_history(manga, manga_src, kotatsu_manga)
+        if history_entry != None:
+            history.append(history_entry.__dict__)
+        print("{:.2f}%".format(((i + 1) / total) * 100))
     return KotatsuBackup(favorites, history)
