@@ -12,7 +12,7 @@ class KotatsuBackup:
     history: list[HistoryRecord]
 
     def create_backup(self):
-        os.makedirs("output")
+        os.makedirs("output", exist_ok=True)
 
         with open("output/favourites", encoding="utf-8", mode="w") as f:
             f.write(json.dumps(self.favorites))
