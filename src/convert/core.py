@@ -29,12 +29,12 @@ def to_kotatsu_chapter_url(ty_source: str, ty_url: str) -> str:
     return ty_url
 
 
-def to_kotatsu_public_url(ty_source: str, ty_url: str) -> str:
+def to_kotatsu_public_url(ty_source: str, kt_url: str) -> str:
     if ty_source == "MangaDex":
-        return "https://mangadex.org/title/" + ty_url
+        return "https://mangadex.org/title/" + kt_url
     if ty_source == "Mangakakalot":
-        return "https://ww7.mangakakalot.tv" + ty_url
-    return ty_url
+        return "https://ww7.mangakakalot.tv" + kt_url
+    return kt_url
 
 
 def to_kotatsu_id(ty_source: str, ty_url: str) -> int:
