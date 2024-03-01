@@ -44,7 +44,7 @@ def to_kotatsu_public_url(ty_source: str, kt_url: str) -> str:
     if ty_source == "Mangakakalot":
         return "https://ww7.mangakakalot.tv" + kt_url
     if ty_source == "Comick":
-        return "https://comick.cc" + kt_url
+        return "https://comick.cc/comic/" + kt_url
     return kt_url
 
 
