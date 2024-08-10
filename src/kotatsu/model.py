@@ -15,7 +15,7 @@ class Manga:
     state: str
     author: str
     source: str
-    tags: list[str]
+    tags: list[str] = ()  # // removed. tag has an individual entity
 
 
 @dataclass
@@ -26,6 +26,17 @@ class FavoritesEntry:
     created_at: int
     deleted_at: int
     manga: Manga
+
+
+@dataclass
+class Category:
+    category_id: int
+    created_at: int
+    sort_key: int
+    title: str
+    order: str
+    track: bool
+    show_in_tab: bool
 
 
 @dataclass

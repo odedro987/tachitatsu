@@ -21,7 +21,17 @@ class Chapter(Message):
     read = BoolField(field_number=4)
     bookmark = BoolField(field_number=5, optional=True)
     last_page = Int32Field(field_number=6)
-    number = FloatField(field_number=9)
+    fetch_date = Int32Field(field_number=7)
+    upload_date = Int32Field(field_number=8)
+    volume = FloatField(field_number=9)
+    number = Int32Field(field_number=10)
+    last_modified_at = Int64Field(field_number=11)
+
+    def to_dict(self):
+        return {"url": self.url, "name": self.name, "scanlator": self.scanlator, "read": self.read,
+                "bookmark": self.bookmark, "last_page": self.last_page, "upload_date": self.fetch_date,
+                "update_date": self.upload_date, "volume": self.volume, "number": self.number,
+                "last_modified_at": self.last_modified_at}
 
 
 class Manga(Message):
@@ -35,9 +45,12 @@ class Manga(Message):
     status = Int32Field(field_number=8)
     thumbnail = StringField(field_number=9, optional=True)
     date_added = Int64Field(field_number=13)
+    viewer = Int32Field(field_number=14)
     chapters = MessageField(Chapter, field_number=16, repeated=True)
     categories = Int32Field(field_number=17, repeated=True)
     favorite = BoolField(field_number=100)
+    last_modified_at = Int64Field(field_number=106)
+    favorite_modified_at = Int64Field(field_number=107)
 
     def get_latest_and_newest_chapter(self):
         latest = None
@@ -45,11 +58,19 @@ class Manga(Message):
         for chapter in self.chapters:
             if chapter.number > len(self.chapters):
                 continue
-            if chapter.read and (latest == None or latest.number < chapter.number):
+            if chapter.read and (latest is None or latest.number < chapter.number):
                 latest = chapter
-            if newest == None or newest.number < chapter.number:
+            if newest is None or newest.number < chapter.number:
                 newest = chapter
         return latest, newest
+
+    def to_dict(self):
+        return {"source": self.source, "url": self.url, "title": self.title, "artist": self.artist,
+                "author": self.author, "description": self.description, "genres": list(self.genres),
+                "status": self.status, "thumbnail": self.thumbnail, "date_added": self.date_added,
+                "viewer": self.viewer, "chapters": [c.to_dict() for c in self.chapters],
+                "categories": list(self.categories), "favorite": self.favorite,
+                "last_modified_at": self.last_modified_at, "favorite_modified_at": self.favorite_modified_at}
 
     def print(self):
         print(
@@ -57,6 +78,13 @@ class Manga(Message):
         )
 
 
+class Category(Message):
+    name = StringField(field_number=1)
+    order = Int64Field(field_number=2)
+    flags = Int64Field(field_number=100)
+
+
 class Backup(Message):
     mangaList = MessageField(message_cls=Manga, field_number=1, repeated=True)
+    category = MessageField(message_cls=Category, field_number=2, repeated=True)
     sources = MessageField(message_cls=Source, field_number=101, repeated=True)
